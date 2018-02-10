@@ -23,6 +23,7 @@ gem 'will_paginate-foundation', '~> 6.2'
 gem 'addressable'
 gem 'aws-sdk-cloudfront'
 gem 'aws-sdk-s3'
+gem 'dotenv-rails'
 
 group :development, :test do
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
