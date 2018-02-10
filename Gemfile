@@ -13,6 +13,7 @@ gem 'jbuilder', '~> 2.5'
 gem 'puma', '~> 3.7'
 
 gem 'sass-rails', '~> 5.0'
+gem 'coffee-rails', '~> 4.2'
 gem 'uglifier',   '>= 1.3.0'
 
 gem 'foundation-rails',         '~> 6.3'
@@ -22,6 +23,9 @@ gem 'will_paginate-foundation', '~> 6.2'
 gem 'addressable'
 
 group :development, :test do
+  gem 'rspec-rails'
+  gem 'faker'
+  gem 'factory_bot_rails'
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
   # Adds support for Capybara system testing and selenium driver

@@ -1,0 +1,14 @@
+<% provide(:title, 'Short URLs') %>
+
+
+<section class="short_urls">
+  <h1>All Short URLs</h1>
+  <%= render 'short_urls/create_button' %>
+  <%= will_paginate class: 'text-center pagination' %>
+  <ul>
+    <% @short_urls.each do |short_url| %>
+      <%= render partial: short_url, short_url: short_url %>
+    <% end %>
+  </ul>
+  <%= will_paginate class: 'text-center pagination' %>
+</section>

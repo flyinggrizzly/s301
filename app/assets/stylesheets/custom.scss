@@ -1,0 +1,47 @@
+
+.wrap {
+  padding: 10px;
+}
+
+@mixin box_sizing {
+  -moz-box-sizing:    border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing:         border-box;
+}
+
+/* nav */
+.top-bar a:hover {
+  text-decoration: underline;
+}
+.site_nav li a {
+  font-size: 1.2rem;
+  text-decoration: underline;
+}
+.logo {
+  max-width: 60px;
+  margin-top: -20px;
+}
+
+/* miscellaneous */
+
+.debug_dump {
+  background: lightblue;
+  border: 1px solid darkgrey;
+  border-radius: 5px;
+  padding: 10px;
+  clear: both;
+  float: left;
+  width: 100%;
+  margin-top: 45px;
+  @include box_sizing;
+}
+
+/* forms */
+
+#error_explanation {
+  color: red;
+  ul {
+    color: red;
+    margin: 0 0 30px 0;
+  }
+}

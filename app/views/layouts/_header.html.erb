@@ -1,0 +1,13 @@
+<header class="top-bar">
+    <section class="top-bar-left">
+      
+      <h1><%= link_to(S301::Application.config.app_name, root_url, id: 'logo') %></h1>
+    </section>
+    <div class="top-bar-right">
+      <nav>
+        <ul class="menu site_nav">
+          <li><%= link_to 'Short URLs', short_urls_path %></li>
+        </ul>
+      </nav>
+    </div>
+</header>

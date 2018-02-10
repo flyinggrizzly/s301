@@ -1,0 +1,91 @@
+// Place all the styles related to the ShortUrls controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+// Place all the styles related to the Users controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.short_url-form {
+  input {
+    display: block;
+  }
+  .button {
+    width: 100%;
+  }
+}
+.short_urls {
+  list-style: none;
+  margin-left: 0;
+  margin-top: 50px;
+  ul {
+    list-style: none;
+    margin-left: 0;
+    li {
+      margin-left: none;
+    }
+  }
+}
+.short_url {
+  padding: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid lightgrey;
+  .menu li h5 a {
+    padding-left: 0;
+    margin-right: 20px;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  .button {
+    margin-right: 10px;
+  }
+}
+ul.short_url--edit.short_url.menu {
+  padding-left: 0 !important;
+}
+.checkbox-container {
+    .input-group-label {
+      span, .checkbox {
+        display: block;
+        float: left;
+        margin-left: 10px;
+        font-size: 1.3rem;
+      }
+    }
+  }
+
+.short_url_search_form {
+  background: rgba(240,240,240,.5);
+  legend {
+    background: rgba(230,230,230,.1);
+    border: 1px solid rgba(230,230,230,.1);
+    border-radius: 3px;
+  }
+}
+
+.create_url {
+  background-color: #7EA943;
+  font-weight: 600;
+  font-size: 1.8rem !important;
+}
+
+.short-url-stats {
+  .short-url-stat {
+    float: left;
+    padding-right: 2rem;
+    padding-left: 8px;
+    border-left: 4px solid RGB(23, 121, 186);
+    .stat-gloss {
+      font-size: .8rem;
+      margin-top: -2px;
+      display: block;
+    }
+    .stat-entry {
+      font-size: 2.4rem;
+      font-weight: bold;
+      margin-bottom: -10px;
+      display: block;
+    }
+  }
+}
