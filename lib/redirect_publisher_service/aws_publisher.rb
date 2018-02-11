@@ -5,10 +5,11 @@ module RedirectPublisherService
     require 'aws-sdk-s3'
 
     def initialize
-      @s3         = s3_client
-      @cloudfront = cloudfront_client
       @bucket     = ENV['AWS_S3_BUCKET_NAME']
       @distro_id  = ENV['AWS_CLOUDFRONT_DISTRO_ID'] || nil
+
+      @s3         = s3_client
+      @cloudfront = cloudfront_client unless @distro_id.nil?
     end
 
     def publish(short_url, publication_type)
