@@ -13,12 +13,23 @@ module RedirectPublisherService
 
     def publish(short_url_data, publication_type)
       @short_url = short_url_data
+
       case publication_type
       when :new
         s3_create_short_url
       when :changed
         s3_update_short_url
       end
+      # Always invalidating the CF cache means that even short URLs that had a failed delete
+      # action and have since been recreated will be up to date
+      cloudfront_invalidate short_url[:slug]
+    end
+
+    def unpublish(short_url_data)
+      @short_url = short_url_data
+
+      s3_delete_short_url
+      cloudfront_invalidate(short_url[:slug])
     end
 
     def cloudfront_invalidate(slug)
@@ -43,22 +54,33 @@ module RedirectPublisherService
     end
 
     def s3_create_short_url
-      @s3.put_object(
-        bucket:                    @bucket,
-        key:                       short_url[:slug],
-        website_redirect_location: short_url[:redirect]
-      )
+      tries ||= 3
+      @s3.put_object(bucket:                    @bucket,
+                     key:                       short_url[:slug],
+                     cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
+                     website_redirect_location: short_url[:redirect])
+    rescue Aws::S3::Errors
+      retry unless (tries -= 1).zero?
     end
 
     def s3_update_short_url
-      slug     = short_url[:slug]
-      redirect = short_url[:redirect]
+      tries ||= 3
       @s3.copy_object(bucket:                    @bucket,
-                      copy_source:               "#{@bucket}/#{slug}",
-                      key:                       slug,
-                      website_redirect_location: redirect,
+                      copy_source:               "#{@bucket}/#{short_url[:slug]}",
+                      key:                       short_url[:slug],
+                      cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
+                      website_redirect_location: short_url[:redirect],
                       metadata_directive:        'REPLACE')
-      cloudfront_invalidate(slug)
+    rescue Aws::S3::Errors
+      (tries -= 1).zero? ? s3_create_short_url : retry
+    end
+
+    def s3_delete_short_url
+      tries ||= 3
+      @s3.delete_object(bucket: @bucket,
+                        key:    short_url[:slug])
+    rescue Aws::S3::Errors
+      retry unless (tries -= 1).zero?
     end
 
     def object_path(slug)

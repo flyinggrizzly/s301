@@ -10,16 +10,9 @@ module RedirectPublisherService
     aws_publisher.publish(short_url, publication_type)
   end
 
-  def self.publish_new(short_url = {})
-    raise 'Short URL cannot be published without both slug and redirect' unless short_url.keys.sort.eql? %i[redirect slug]
+  def self.unpublish(short_url = {})
     aws_publisher = AwsPublisher.new
-    aws_publisher.publish(short_url, :new)
-  end
-
-  def self.publish_changed(short_url = {})
-    raise 'Short URL cannot be published without both slug and redirect' unless short_url.keys.sort.eql? %i[redirect slug]
-    aws_publisher = AwsPublisher.new
-    aws_publisher.publish(short_url, :changed)
+    aws_publisher.unpublish(short_url)
   end
 
   # Available publishers (defined in lib/redirect_publisher_service/*_publisher.rb)
