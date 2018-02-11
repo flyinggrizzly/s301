@@ -1,0 +1,10 @@
+language: ruby
+
+services:
+  - postgresql
+
+before_script: 
+  - psql -c 'create database s301_test;' -U postgres
+
+env:
+  - AWS_REGION=us-east-1 AWS_S3_BUCKET_NAME=s301-test AWS_CLOUDFRONT_DISTRO_ID=IAMCLOUDFRONT111 ENDPOINT=https://s301.net

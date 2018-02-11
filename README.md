@@ -1,6 +1,11 @@
 # S301
 
-#### An S3 and Cloudfront based URL shortener.
+#### A static short URL generator for AWS S3 and CloudFront 
+
+[![security](https://hakiri.io/github/flyinggrizzly/s301/master.svg)](https://hakiri.io/github/flyinggrizzly/s301/master)
+[![Test coverage](https://codeclimate.com/github/flyinggrizzly/s301/badges/coverage.svg)](https://codeclimate.com/github/flyinggrizzly/s301/coverage)
+[![Code Climate](https://codeclimate.com/github/flyinggrizzly/s301/badges/gpa.svg)](https://codeclimate.com/github/flyinggrizzly/s301)
+[![Build Status](https://travis-ci.org/flyinggrizzly/s301.svg?branch=master)](https://travis-ci.org/flyinggrizzly/s301)
 
 S301 is intended to be a lightweight, fast, and resilient URL shortener. It uses AWS' S3 and Cloudfront in ways typically intended for hosting static websites, to expose redirects at any Cloudfront edge location.
 
@@ -12,13 +17,22 @@ This has a few cool implications:
 - if the Rails app goes down, your URL shortening service can still serve users
   - and if you're running this personally, on, say, Heroku's free tier, you don't have to worry about uptime
 
-## Rails setup
+## Configuration
 
-You'll need to set a few values in some initializes before you get going:
+Most of the app config is done through the environment. [`dotenv-rails`](https://rubygems.org/gems/dotenv-rails/versions/2.1.1) is installed, so you can put all of these in a `.env` file.
 
-- your shortened URL host (required for validations to avoid endless loop redirects--you don't want to redirect to this host), in `config/initalizers/app_host.rb`
-- (optional) any restricted slugs (`index` and `unknown-short-url` should always be restricted because they provide special app behavior), in `config/initializers/reserved_slugs.rb`
+The following environemnt variables are *required* (the AWS ones are discussed in a little more detail in the next section):
 
+- `ENDPOINT`; defines your app's endpoint for shortened URLs (bitly's endpoint would be `https://bit.ly`)
+- `AWS_S3_BUCKET_NAME`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+The following env vars are optional:
+
+- `AWS_CLOUDFRONT_DISTRO_ID`
+- `AWS_REGION` this is only required if your S3 bucket is in a region other than Virginia/us-east-1
+- `RESERVED_SLUGS` allows you to reserve slugs in addition to the two reserved by the app(`index` and `unknown-short-url`), which will prevent them from being used by short URLs. The value for this env var should be a comma-separated list of slugs: `RESERVED_SLUGS="foo,bar,baz"`. Slugs must consist of only the characters a-z (case insensitive), numerals, and '-' or '_'
 
 ## AWS Setup
 
@@ -73,7 +87,6 @@ If you run into these in development, the easiest thing to do is pull up the con
 
 This pretty much only ever comes up if you've been working with the database before adding the S3 bucket to the mix, but it would also be an issue in production if the first PUT request to S3 failed.
 
-There isn't yet an S3 destroy method. That's coming.
 
 ### Cloudfront gotcha
 
