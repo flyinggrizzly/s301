@@ -11,7 +11,7 @@ class SafeRedirectValidator < ActiveModel::EachValidator
 
   def validate_safe_redirect(value)
     # Blacklist currently consists of just the application domain
-    app_host = URI.parse(S301::Application.config.app_host).host
+    app_host = URI.parse(S301::Application.config.endpoint).host
     redirect = Addressable::URI.heuristic_parse(value)
 
     redirect.host != app_host

@@ -7,23 +7,42 @@ module RedirectPublisherService
     def initialize
       @bucket     = ENV['AWS_S3_BUCKET_NAME']
       @distro_id  = ENV['AWS_CLOUDFRONT_DISTRO_ID'] || nil
-
       @s3         = s3_client
       @cloudfront = cloudfront_client unless @distro_id.nil?
     end
 
-    def publish(short_url, publication_type)
+    def publish(short_url_data, publication_type)
+      @short_url = short_url_data
       case publication_type
       when :new
-        s3_create short_url
+        s3_create_short_url
       when :changed
-        s3_update short_url
+        s3_update_short_url
       end
+    end
+
+    def cloudfront_invalidate(slug)
+      return unless @distro_id
+      path = object_path(slug)
+      txn_reference = "#{slug}-#{Time.now.iso8601}"
+      @cloudfront.create_invalidation(distribution_id:    @distro_id,
+                                      invalidation_batch: { paths:            { quantity: 1, items: [path] },
+                                                            caller_reference: txn_reference })
+    end
+
+    def cloudfront_invalidate_all
+      return unless @distro_id
+      cloudfront_invalidate('*')
     end
 
     private
 
-    def s3_create(short_url)
+    def short_url
+      { slug:     @short_url[:slug],
+        redirect: @short_url[:redirect] }
+    end
+
+    def s3_create_short_url
       @s3.put_object(
         bucket:                    @bucket,
         key:                       short_url[:slug],
@@ -31,22 +50,15 @@ module RedirectPublisherService
       )
     end
 
-    def s3_update(short_url)
-      slug = short_url[:slug]
-      @s3.copy_object(bucket:             @bucket,
-                      copy_source:        "#{@bucket}/#{slug}",
-                      key:                slug,
-                      website_redirect_location: short_url[:redirect],
-                      metadata_directive: 'REPLACE')
-      cloudfront_invalidate(slug) unless @distro_id.nil?
-    end
-
-    def cloudfront_invalidate(slug)
-      path = object_path(slug)
-      txn_reference = "#{slug}-#{Time.now.iso8601}"
-      @cloudfront.create_invalidation(distribution_id:    @distro_id,
-                                      invalidation_batch: { paths:            { quantity: 1, items: [path] },
-                                                            caller_reference: txn_reference })
+    def s3_update_short_url
+      slug     = short_url[:slug]
+      redirect = short_url[:redirect]
+      @s3.copy_object(bucket:                    @bucket,
+                      copy_source:               "#{@bucket}/#{slug}",
+                      key:                       slug,
+                      website_redirect_location: redirect,
+                      metadata_directive:        'REPLACE')
+      cloudfront_invalidate(slug)
     end
 
     def object_path(slug)

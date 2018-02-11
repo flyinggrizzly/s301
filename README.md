@@ -61,6 +61,29 @@ Before you start up the Rails app, there are a few things that need to be set up
 - running tests: `bundle exec rspec; bundle exec cucumber`
 - run the app: `bin/rails s`
 
+### S3 gotchas
+
+The AWS publisher works pretty well, but there is a little bit of brittleness in that it is not currently possible to update a short URL that hasn't been pushed to S3.
+
+The S3 PUT action differs for new and existing objects (I know...), and the ShortUrl::publish action calls a different method in the publisher service based on whether or not the `created_at` and `updated_at` attributes on a short URL object differ.
+
+If they differ, it will call an S3 PUT/Copy action, but this will fail if there is no object in S3 to copy from. (It's been done this way to reduce the HTTP requests made to AWS, but there are limitations... and this is a candidate for change). This *will* cause a Rails error
+
+If you run into these in development, the easiest thing to do is pull up the console and destroy the short URL in the database, then recreate it in the app.
+
+This pretty much only ever comes up if you've been working with the database before adding the S3 bucket to the mix, but it would also be an issue in production if the first PUT request to S3 failed.
+
+There isn't yet an S3 destroy method. That's coming.
+
+### Cloudfront gotcha
+
+If you find that your cloudfront distro isn't showing accurately what's in the S3 bucket, you probably need to invalidate the cache for either the single resource, or the whole thing:
+
+```bash
+rake cloudfront:invalidate RESOURCE=object_name
+rake cloudfront:invalidate_all
+```
+
 ## Contributing
 
 Please do! Right now, most tasks are in the [todo file](/todo.md), but also feel free to open an issue, or make a PR! If you're picking up work that isn't in an issue or the todo file, hit me up first!
