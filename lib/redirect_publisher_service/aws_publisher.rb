@@ -12,6 +12,8 @@ module RedirectPublisherService
     end
 
     def publish(short_url_data, publication_type)
+      validate_publish_params(short_url_data)
+      raise(ArgumentError, 'publication_type must be :new or :changed') unless %i[new changed].include? publication_type
       @short_url = short_url_data
 
       case publication_type
@@ -42,11 +44,15 @@ module RedirectPublisherService
     end
 
     def cloudfront_invalidate_all
-      return unless @distro_id
       cloudfront_invalidate('*')
     end
 
     private
+
+    def validate_publish_params(params)
+      msg = 'requires a Hash with :slug and :redirect as parameters'
+      raise(ArgumentError, msg) unless params.class.eql?(Hash) && params.keys.sort.eql?(%i[redirect slug])
+    end
 
     def short_url
       { slug:     @short_url[:slug],
@@ -88,11 +94,21 @@ module RedirectPublisherService
     end
 
     def s3_client
-      Aws::S3::Client.new(aws_client_params)
+      case Rails.env
+      when 'production' || 'development'
+        Aws::S3::Client.new(aws_client_params)
+      when 'test'
+        Aws::S3::Client.new(stub_responses: true)
+      end
     end
 
     def cloudfront_client
-      Aws::CloudFront::Client.new(aws_client_params)
+      case Rails.env
+      when 'production' || 'development'
+        Aws::CloudFront::Client.new(aws_client_params)
+      when 'test'
+        Aws::CloudFront::Client.new(stub_responses: true)
+      end
     end
 
     def aws_client_params

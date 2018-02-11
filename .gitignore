@@ -12,7 +12,7 @@ coverage/**/*
 # RSpec example history
 spec/examples.txt
 
-# Debuggin history
+# Debugging history
 .byebug_history
 
 # Ignore bundler config.
@@ -27,5 +27,4 @@ spec/examples.txt
 # Javascript! Run!
 /node_modules
 /yarn-error.log
-
 
