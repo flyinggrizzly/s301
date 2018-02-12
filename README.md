@@ -86,4 +86,4 @@ rake cloudfront:invalidate_all
 
 ## Contributing
 
-Please do! Right now, most tasks are in the [todo file](/todo.md), but also feel free to open an issue, or make a PR! If you're picking up work that isn't in an issue or the todo file, hit me up first!
+Please do! If you want to pick an issue and make a PR, go for it! But also feel free to open an issue for anything you think would be good or useful. If you're picking up work that isn't in an issue, [hit me up](mailto:say-hi@grz.li) first!
