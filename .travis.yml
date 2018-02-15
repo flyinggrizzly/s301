@@ -1,10 +1,25 @@
 language: ruby
 
-services:
-  - postgresql
+env:
+  global:
+    - AWS_REGION=us-east-1
+    - AWS_S3_BUCKET_NAME=s301-test
+    - AWS_CLOUDFRONT_DISTRO_ID=IAMCLOUDFRONT111
+    - ENDPOINT=https://s301.net
+    - CC_TEST_REPORTER_ID=3b8575f5cffd3340f9c4e50acec19594b6611a33839d96afb333ccc3c5df0b10
+
+addons:
+  postgresql: '9.6'
 
 before_script: 
+  - https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - ./cc-test-reporter before-build
   - psql -c 'create database s301_test;' -U postgres
 
-env:
-  - AWS_REGION=us-east-1 AWS_S3_BUCKET_NAME=s301-test AWS_CLOUDFRONT_DISTRO_ID=IAMCLOUDFRONT111 ENDPOINT=https://s301.net
+script:
+  - bundle exec rake
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+
+
