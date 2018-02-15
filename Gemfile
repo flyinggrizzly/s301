@@ -33,6 +33,7 @@ group :development, :test do
   gem 'faker'
   gem 'rspec-rails'
   gem 'selenium-webdriver'
+  gem 'simplecov'
 end
 
 group :development do
