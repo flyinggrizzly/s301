@@ -13,15 +13,35 @@ class ShortUrl < ApplicationRecord
   before_destroy :unpublish
 
   def self.publish(short_url)
-    publication_type = short_url.created_at == short_url.updated_at ? :new : :changed
-    RedirectPublisherService.publish({ slug: short_url.slug, redirect: short_url.redirect }, publication_type)
+    slug, redirect = validate_and_assign_publication_args_for short_url
+    RedirectPublisherService.publish({ slug: slug, redirect: redirect }, :new)
+  end
+
+  def self.republish(short_url)
+    slug, redirect = validate_and_assign_publication_args_for short_url
+    RedirectPublisherService.publish({ slug: slug, redirect: redirect }, :changed)
   end
 
   def self.unpublish(short_url)
-    RedirectPublisherService.unpublish(slug: short_url.slug, redirect: short_url.redirect)
+    slug, redirect = validate_and_assign_publication_args_for short_url
+    RedirectPublisherService.unpublish(slug: slug, redirect: redirect)
   end
 
   private
+
+  private_class_method def self.validate_and_assign_publication_args_for(short_url)
+    if short_url.class == ShortUrl
+      slug     = short_url.slug
+      redirect = short_url.redirect
+    elsif short_url.class == Hash
+      raise ArgumentError, 'hash keys must be :slug and :redirect' unless short_url.keys.sort.eql? %i[redirect slug]
+      slug     = short_url[:slug]
+      redirect = short_url[:redirect]
+    else
+      raise ArgumentError, 'Expected a Hash or ShortUrl object'
+    end
+    [slug, redirect]
+  end
 
   def publish
     ShortUrl.publish(itself)
