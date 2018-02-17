@@ -10,7 +10,8 @@ class SlugValidator < ActiveModel::EachValidator
 
   def validate_slug(value)
     return false if reserved_slug?(value)
-    uses_valid_chars?(value) ? true : false
+
+    uses_valid_chars?(value)
   rescue StandardError
     false
   end
@@ -21,6 +22,6 @@ class SlugValidator < ActiveModel::EachValidator
 
   def uses_valid_chars?(slug)
     # ensure all slugs include only a-z, 0-9, and - or _
-    slug.match(/^([a-z0-9]+([-_]?+[a-z0-9]+)?)*$/i)
+    slug.match?(/^([a-z0-9]+([-_]?+[a-z0-9]+)?)*$/i)
   end
 end

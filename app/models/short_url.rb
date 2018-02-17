@@ -27,21 +27,21 @@ class ShortUrl < ApplicationRecord
     RedirectPublisherService.unpublish(slug: slug, redirect: redirect)
   end
 
-  private
-
   private_class_method def self.validate_and_assign_publication_args_for(short_url)
-    if short_url.class == ShortUrl
-      slug     = short_url.slug
-      redirect = short_url.redirect
-    elsif short_url.class == Hash
+    # Case behaves strangely with .class--call directly against object
+    # see https://stackoverflow.com/questions/948135/how-to-write-a-switch-statement-in-ruby#answer-5694333
+    case short_url
+    when ShortUrl
+      [short_url.slug, short_url.redirect]
+    when Hash
       raise ArgumentError, 'hash keys must be :slug and :redirect' unless short_url.keys.sort.eql? %i[redirect slug]
-      slug     = short_url[:slug]
-      redirect = short_url[:redirect]
+      [short_url[:slug], short_url[:redirect]]
     else
       raise ArgumentError, 'Expected a Hash or ShortUrl object'
     end
-    [slug, redirect]
   end
+
+  private
 
   def publish
     ShortUrl.publish(itself)
