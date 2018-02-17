@@ -6,6 +6,15 @@
 
 .env
 
+# Simplecov coverage reporting
+coverage/**/*
+
+# RSpec example history
+spec/examples.txt
+
+# Debuggin history
+.byebug_history
+
 # Ignore bundler config.
 /.bundle
 
@@ -15,9 +24,8 @@
 !/log/.keep
 !/tmp/.keep
 
+# Javascript! Run!
 /node_modules
 /yarn-error.log
 
-.byebug_history
 
-spec/examples.txt
