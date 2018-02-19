@@ -24,7 +24,7 @@ class ShortUrlsController < ApplicationController
   def create
     @short_url = ShortUrl.new(short_url_params)
     if @short_url.save
-      flash[:success] = "#{@short_url.slug} was created successfully."
+      flash[:success] = "Short URL '#{@short_url.slug}' (redirecting to #{@short_url.redirect}) was created successfully."
       redirect_to short_urls_path
     else
       render 'new'
@@ -34,7 +34,7 @@ class ShortUrlsController < ApplicationController
   # PATCH/PUT /short_urls/1
   def update
     if @short_url.update(short_url_params)
-      flash[:success] = "#{@short_url.slug} updated successfully."
+      flash[:success] = "Short URL '#{@short_url.slug}' (redirecting to #{@short_url.redirect}) was updated successfully."
       redirect_to short_urls_path
     else
       render 'edit'

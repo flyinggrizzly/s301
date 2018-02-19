@@ -15,7 +15,19 @@
   <body>
     <%= render 'layouts/header' %>
     <div class="wrap">
-      <% render 'layouts/flash' %>
+
+    <% unless flash.empty? %>
+      <section id="application-alerts" class="row">
+        <div class="column small-6 small-offset-3">
+        <% flash.each do |message_type, message| %>
+          <div class="callout <%= message_type %>">
+            <p><%= message %></p>
+          </div>
+        <% end %>
+        </div>
+      </section>
+    <% end %>
+
       <main class="row">
         <div class="column small-10 small-offset-1">
           <%= yield %>
