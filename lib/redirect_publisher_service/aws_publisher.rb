@@ -4,11 +4,12 @@ module RedirectPublisherService
     require 'aws-sdk-cloudfront'
     require 'aws-sdk-s3'
 
-    def initialize
-      @bucket     = ENV['AWS_S3_BUCKET_NAME']
-      @distro_id  = ENV['AWS_CLOUDFRONT_DISTRO_ID'] || nil
-      @s3         = s3_client
-      @cloudfront = cloudfront_client unless @distro_id.nil?
+    def initialize(client_params = nil)
+      @bucket        = ENV['AWS_S3_BUCKET_NAME']
+      @distro_id     = ENV['AWS_CLOUDFRONT_DISTRO_ID'] || nil
+      @client_params = client_params
+      @s3            = s3_client
+      @cloudfront    = cloudfront_client unless @distro_id.nil?
     end
 
     def publish(short_url_data, publication_type)
@@ -94,27 +95,17 @@ module RedirectPublisherService
     end
 
     def s3_client
-      case Rails.env
-      when 'production' || 'development'
-        Aws::S3::Client.new(aws_client_params)
-      when 'test'
-        Aws::S3::Client.new(stub_responses: true)
-      end
+      Aws::S3::Client.new(aws_client_params)
     end
 
     def cloudfront_client
-      case Rails.env
-      when 'production' || 'development'
-        Aws::CloudFront::Client.new(aws_client_params)
-      when 'test'
-        Aws::CloudFront::Client.new(stub_responses: true)
-      end
+      Aws::CloudFront::Client.new(aws_client_params)
     end
 
     def aws_client_params
-      { region:            ENV['AWS_REGION'] || 'us-east-1',
-        access_key_id:     ENV['AWS_ACCESS_KEY_ID'],
-        secret_access_key: ENV['AWS_SECRET_ACCES_KEY'] }
+      @client_params || { region:            ENV['AWS_REGION'] || 'us-east-1',
+                          access_key_id:     ENV['AWS_ACCESS_KEY_ID'],
+                          secret_access_key: ENV['AWS_SECRET_ACCES_KEY'] }
     end
   end
 end
