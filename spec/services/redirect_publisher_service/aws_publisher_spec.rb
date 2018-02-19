@@ -17,29 +17,29 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     end
 
     it 'responds to #publish', :stub_s3_client do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       expect(aws_publisher).to respond_to :publish
     end
 
     it 'responds to #unpublish', :stub_s3_client do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       expect(aws_publisher).to respond_to :unpublish
     end
 
     it 'responds to #cloudfront_invalidate', :stub_cloudfront_client do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       expect(aws_publisher).to respond_to :cloudfront_invalidate
     end
 
     it 'responds to #cloudfront_invalidate_all', :stub_cloudfront_client do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       expect(aws_publisher).to respond_to :cloudfront_invalidate_all
     end
   end
 
   describe '#publish' do
     it 'requires as a parameter a hash of short URL params [:slug, :redirect]', :stub_aws_connection, :aggregate_failures do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       expect {
         aws_publisher.publish({}, :new)
@@ -51,7 +51,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     end
 
     it 'requires a publication_type parameter', :stub_aws_connection, :aggregate_failures do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       short_url_hash = { slug: 'foo', redirect: 'http://www.example.com' }
       expect {
@@ -69,7 +69,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     it 'sends a put_object request to S3 for new short URLs', :stub_aws_connection do
       s3 = instance_double(Aws::S3::Client)
       expect(s3).to receive(:put_object)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       # Inject spy
       aws_publisher.instance_variable_set(:@s3, s3)
@@ -80,7 +80,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     it 'sends a copy_object request to S3 for updated short URLs', :stub_aws_connection do
       s3 = instance_double(Aws::S3::Client)
       expect(s3).to receive(:copy_object)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       # Inject spy
       aws_publisher.instance_variable_set(:@s3, s3)
@@ -89,7 +89,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     end
 
     it 'invalidates the cloudfront cache for the slug', :stub_aws_connection do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       expect_any_instance_of(RedirectPublisherService::AwsPublisher).to receive(:cloudfront_invalidate)
 
@@ -101,7 +101,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     it 'sends a destroy_object request to S3', :stub_aws_connection do
       s3 = instance_double(Aws::S3::Client)
       expect(s3).to receive(:delete_object).and_return(true)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       # Inject spy
       aws_publisher.instance_variable_set(:@s3, s3)
@@ -110,7 +110,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     end
 
     it 'invalidates the cloudfront cache for the slug', :stub_aws_connection do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       expect_any_instance_of(RedirectPublisherService::AwsPublisher).to receive(:cloudfront_invalidate)
 
@@ -122,7 +122,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     it 'sends a create_invalidation request to Cloudfront', :stub_aws_connection do
       cloudfront = instance_double(Aws::CloudFront::Client)
       expect(cloudfront).to receive(:create_invalidation)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
 
       aws_publisher.instance_variable_set(:@cloudfront, cloudfront)
       aws_publisher.cloudfront_invalidate('foo')
@@ -132,7 +132,7 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
   describe '#cloudfront_invalidate_all' do
     it 'calls #cloudfront_invalidate with a wildcard parameter', :stub_aws_connection do
       expect_any_instance_of(RedirectPublisherService::AwsPublisher).to receive(:cloudfront_invalidate).with('*')
-      aws_publisher = RedirectPublisherService::AwsPublisher.new
+      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       aws_publisher.cloudfront_invalidate_all
     end
   end

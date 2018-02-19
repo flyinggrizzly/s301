@@ -12,6 +12,7 @@ RSpec.describe RedirectPublisherService do
   end
 
   it 'includes an AWS publisher' do
+    expect(RedirectPublisherService::AwsPublisher).to be_an_instance_of(Class)
   end
 
   describe '::publish' do
@@ -81,7 +82,7 @@ RSpec.describe RedirectPublisherService do
     end
 
     it 'sends a message to the selected publisher to unpublish a short URL' do
-      pending "implicitly tested by other ::publish specs, don't implement until there are other publishers"
+      pending "implicitly tested by other ::unpublish specs, don't implement until there are other publishers"
       expect(true).to eq(false)
     end
   end

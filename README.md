@@ -7,8 +7,6 @@
 [![Code Climate](https://codeclimate.com/github/flyinggrizzly/s301/badges/gpa.svg)](https://codeclimate.com/github/flyinggrizzly/s301)
 [![Build Status](https://travis-ci.org/flyinggrizzly/s301.svg?branch=master)](https://travis-ci.org/flyinggrizzly/s301)
 
-**Heads up, this isn't quite ready for use yet! The parts work in isolation, but I seem to have broken the connection between the ShortUrl model and the Publishing service... serves me right for not havign a test harness set up first!**
-
 S301 is intended to be a lightweight, fast, and resilient URL shortener. It uses AWS' S3 and Cloudfront in ways typically intended for hosting static websites, to expose redirects at any Cloudfront edge location.
 
 The Rails app manages all known short URLs, and when changes are made, they are published out to an S3 bucket, and the Cloudfront cache is invalidated. Instead of static HTML objects being stored in the S3 bucket, S301 stores itty-bitty files with two important pieces of information: the name, which is your short URL slug, and an [`x-amz-website-redirect-location` metadatum](https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html#how-to-page-redirect), which is interpreted as the destination in a 301 redirect.
