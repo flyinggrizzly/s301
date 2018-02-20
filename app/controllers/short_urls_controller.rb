@@ -1,5 +1,6 @@
 class ShortUrlsController < ApplicationController
-  before_action :set_short_url, only: [:show, :edit, :update, :destroy]
+  before_action :require_login, except: [:index, :show]
+  before_action :set_short_url, only:   [:show, :edit, :update, :destroy]
 
   # GET /short_urls
   # GET /short_urls.json
