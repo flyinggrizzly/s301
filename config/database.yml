@@ -20,10 +20,13 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # http://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: localhost
 
 development:
   <<: *default
   database: s301_development
+  username: s301_dev
+  password: this-is-a-bad-password
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
@@ -58,6 +61,8 @@ development:
 test: &test
   <<: *default
   database: s301_test
+  username: s301_test
+  password: this-is-a-bad-password
 
 # As with config/secrets.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -81,7 +86,7 @@ test: &test
 production:
   <<: *default
   database: s301_production
-  username: s301
+  username: s301_user
   password: <%= ENV['S301_DATABASE_PASSWORD'] %>
 
 cucumber:
