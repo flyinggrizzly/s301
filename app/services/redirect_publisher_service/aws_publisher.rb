@@ -12,30 +12,22 @@ module RedirectPublisherService
       @cloudfront    = cloudfront_client unless @distro_id.nil?
     end
 
-    def publish(short_url_data, publication_type)
-      validate_publish_params(short_url_data)
-      raise(ArgumentError, 'publication_type must be :new or :changed') unless %i[new changed].include? publication_type
-      @short_url = short_url_data
-
-      case publication_type
-      when :new
-        s3_create_short_url
-      when :changed
-        s3_update_short_url
-      end
-      # Always invalidating the CF cache means that even short URLs that had a failed delete
-      # action and have since been recreated will be up to date
-      cloudfront_invalidate short_url[:slug]
+    def self.new_with_stubbed_responses
+      new(stub_responses: true)
     end
 
-    def unpublish(short_url_data)
-      @short_url = short_url_data
-
-      s3_delete_short_url
-      cloudfront_invalidate(short_url[:slug])
+    def publish(short_url_data)
+      validate short_url_data
+      put_s3_object_for short_url_data
+      create_cloudfront_invalidation_for short_url_data[:slug]
     end
 
-    def cloudfront_invalidate(slug)
+    def unpublish(slug)
+      delete_s3_object_for slug
+      create_cloudfront_invalidation_for slug
+    end
+
+    def create_cloudfront_invalidation_for(slug)
       return unless @distro_id
       path = object_path(slug)
       txn_reference = "#{slug}-#{Time.now.iso8601}"
@@ -45,49 +37,32 @@ module RedirectPublisherService
     end
 
     def cloudfront_invalidate_all
-      cloudfront_invalidate('*')
+      create_cloudfront_invalidation_for '*'
     end
 
     private
 
-    def validate_publish_params(params)
-      msg = 'requires a Hash with :slug and :redirect as parameters'
-      raise(ArgumentError, msg) unless params.class.eql?(Hash) && params.keys.sort.eql?(%i[redirect slug])
-    end
-
-    def short_url
-      { slug:     @short_url[:slug],
-        redirect: @short_url[:redirect] }
-    end
-
-    def s3_create_short_url
+    def put_s3_object_for(short_url_data)
       tries ||= 3
       @s3.put_object(bucket:                    @bucket,
-                     key:                       short_url[:slug],
+                     key:                       short_url_data[:slug],
                      cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
-                     website_redirect_location: short_url[:redirect])
+                     website_redirect_location: short_url_data[:redirect])
     rescue Aws::S3::Errors
       retry unless (tries -= 1).zero?
     end
 
-    def s3_update_short_url
-      tries ||= 3
-      @s3.copy_object(bucket:                    @bucket,
-                      copy_source:               "#{@bucket}/#{short_url[:slug]}",
-                      key:                       short_url[:slug],
-                      cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
-                      website_redirect_location: short_url[:redirect],
-                      metadata_directive:        'REPLACE')
-    rescue Aws::S3::Errors
-      (tries -= 1).zero? ? s3_create_short_url : retry
-    end
-
-    def s3_delete_short_url
+    def delete_s3_object_for(key)
       tries ||= 3
       @s3.delete_object(bucket: @bucket,
-                        key:    short_url[:slug])
+                        key:    key)
     rescue Aws::S3::Errors
       retry unless (tries -= 1).zero?
+    end
+
+    def validate(params)
+      msg = 'requires a Hash with :slug and :redirect as parameters'
+      raise(ArgumentError, msg) unless params.class.eql?(Hash) && params.keys.sort.eql?(%i[redirect slug])
     end
 
     def object_path(slug)
@@ -103,6 +78,7 @@ module RedirectPublisherService
     end
 
     def aws_client_params
+      # Don't merge the hashes because tests shouldn't require credentials
       @client_params || { region:            ENV['AWS_REGION'] || 'us-east-1',
                           access_key_id:     ENV['AWS_ACCESS_KEY_ID'],
                           secret_access_key: ENV['AWS_SECRET_ACCES_KEY'] }
