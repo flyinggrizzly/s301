@@ -33,6 +33,7 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'selenium-webdriver'
   gem 'simplecov'
+  gem 'webmock'
 end
 
 group :development do
