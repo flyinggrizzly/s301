@@ -1,3 +1,5 @@
+require 'redirect_publisher_service/aws_publisher'
+
 # Provides methods for publishing short URLs to a static host
 module RedirectPublisherService
   # Accepts a hash { slug: 'slug', redirect: 'http://www.example.com' } and
