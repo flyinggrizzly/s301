@@ -1,5 +1,3 @@
-require 'redirect_publisher_service/aws_publisher'
-
 namespace :cloudfront do
   include RedirectPublisherService
 
