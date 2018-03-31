@@ -33,7 +33,7 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'selenium-webdriver'
   gem 'simplecov'
-  gem 'webmock'
+  gem 'webmock', require: false
 end
 
 group :development do

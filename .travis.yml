@@ -21,6 +21,7 @@ before_script:
   - cp config/database.travis.yml config/database.yml
   - psql -c 'create database s301_test;' -U postgres
   - bin/rails db:migrate
+  - bin/spring stop
 
 script:
   - bundle exec rspec

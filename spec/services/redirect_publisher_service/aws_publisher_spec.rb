@@ -1,8 +1,6 @@
 require 'rails_helper'
 require 'nokogiri/xml'
 
-WebMock.disable_net_connect!(allow_localhost: true)
-
 RSpec.describe RedirectPublisherService::AwsPublisher do
 
   describe 'public interface' do
