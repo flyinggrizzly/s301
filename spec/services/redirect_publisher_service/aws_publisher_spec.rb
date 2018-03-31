@@ -24,8 +24,9 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
 
   describe '#publish' do
     let(:aws_publisher) { described_class.new }
-    it 'sends a putrequest to S3 and invalidates the CloudFront cache when provided with a slug and URL' do
+    it 'sends a put request to S3 and invalidates the CloudFront cache when provided with a slug and URL' do
       expect(aws_publisher).to receive(:create_cloudfront_invalidation_for).with('foo')
+      WebMock.stub_request(:put, s3_url_for('foo'))
 
       send_publish_message_for(slug: 'foo', redirect: 'http://www.example.com')
 
@@ -81,10 +82,10 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
   end
 
   def s3_url_for(slug)
-    "https://s301-development.s3.amazonaws.com/#{slug}"
+    "https://#{ENV['AWS_S3_BUCKET_NAME']}.s3.amazonaws.com/#{slug}"
   end
 
   def cloudfront_url
-    'https://cloudfront.amazonaws.com/2017-03-25/distribution/E1NK243MISMUEF/invalidation'
+    'https://cloudfront.amazonaws.com/2017-03-25/distribution/IAMCLOUDFRONT111/invalidation'
   end
 end

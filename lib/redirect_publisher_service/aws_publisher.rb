@@ -70,8 +70,6 @@ module RedirectPublisherService
     end
 
     def s3_client
-      params = aws_client_params
-      puts 'return from aws_client_params method:' + params.inspect
       Aws::S3::Client.new(aws_client_params)
     end
 
@@ -80,7 +78,6 @@ module RedirectPublisherService
     end
 
     def aws_client_params
-      puts '@client_params instance var during aws_client_parmas execution' + @client_params.inspect
       # Don't merge the hashes because tests shouldn't require credentials
       @client_params || { region:            ENV['AWS_REGION'] || 'us-east-1',
                           access_key_id:     ENV['AWS_ACCESS_KEY_ID'],
