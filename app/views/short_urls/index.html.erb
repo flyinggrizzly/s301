@@ -3,7 +3,8 @@
 
 <section class="short_urls">
   <h1>All Short URLs</h1>
-  <%= render 'short_urls/create_button' %>
+  <% if signed_in? %><%= render 'short_urls/create_button' %><% end %>
+  <%= render 'short_urls/search_form' %>
   <%= will_paginate class: 'text-center pagination' %>
   <ul>
     <% @short_urls.each do |short_url| %>

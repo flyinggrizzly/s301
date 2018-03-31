@@ -1,0 +1,16 @@
+<fieldset class="fieldset short_url_search_form">
+  <legend>Search existing short URLs</legend>
+
+  <%= form_tag(search_short_urls_path, method: 'get', id: 'short_url_search') do %>
+    <%= label_tag :search, 'Search short URLs by slug' %>
+    <%= text_field :search, params[:search], placeholder: 'The slug is the bit after the slash...' %>
+    <%= submit_tag 'Search by slug', name: nil, class: 'button' %>
+  <% end %>
+
+  <%= form_tag(search_short_urls_path, method: 'get', id: 'short_url_reverse_search') do %>
+    <%= label_tag :reverse_search, 'Search short URLs by destination URL' %>
+    <%= text_field :reverse_search, params[:reverse_search], placeholder: "...or search by where the short URL takes you" %>
+    <%= submit_tag 'Search by destination URL', name: nil, class: 'button' %>
+  <% end %>
+
+</fieldset>

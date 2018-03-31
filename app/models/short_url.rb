@@ -24,6 +24,14 @@ class ShortUrl < ApplicationRecord
     RedirectPublisherService.invalidate_cdn_cache_for short_url.slug
   end
 
+  def self.search(query)
+    where("slug ILIKE ?", "%#{query}%")
+  end
+
+  def self.reverse_search(query)
+    where("redirect ILIKE ?", "%#{query}%")
+  end
+
   private
 
   def publish

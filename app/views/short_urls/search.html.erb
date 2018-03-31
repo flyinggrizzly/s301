@@ -1,0 +1,13 @@
+<%= provide(:title, 'Search for a short URL') %>
+
+<%= render 'short_urls/search_form' %>
+
+<div class="search_results">
+  <% if @short_urls.present? %>
+    <ul class="short_urls">
+      <%= render @short_urls %>
+    </ul>
+  <% else %>
+    <p>No short URLs matching your search were found.</p>
+  <% end %>
+</div>
