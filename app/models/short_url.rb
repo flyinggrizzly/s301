@@ -14,17 +14,12 @@ class ShortUrl < ApplicationRecord
 
   def self.publish(short_url)
     slug, redirect = validate_and_assign_publication_args_for short_url
-    RedirectPublisherService.publish({ slug: slug, redirect: redirect }, :new)
-  end
-
-  def self.republish(short_url)
-    slug, redirect = validate_and_assign_publication_args_for short_url
-    RedirectPublisherService.publish({ slug: slug, redirect: redirect }, :changed)
+    RedirectPublisherService.publish(slug: slug, redirect: redirect)
   end
 
   def self.unpublish(short_url)
     slug, redirect = validate_and_assign_publication_args_for short_url
-    RedirectPublisherService.unpublish(slug: slug, redirect: redirect)
+    RedirectPublisherService.unpublish(slug)
   end
 
   private_class_method def self.validate_and_assign_publication_args_for(short_url)

@@ -1,126 +1,91 @@
 require 'rails_helper'
+require 'nokogiri/xml'
 
 RSpec.describe RedirectPublisherService::AwsPublisher do
 
   describe 'public interface' do
+    let(:aws_publisher) { described_class.new_with_stubbed_responses }
     it 'responds to #publish' do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       expect(aws_publisher).to respond_to :publish
     end
 
     it 'responds to #unpublish' do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
       expect(aws_publisher).to respond_to :unpublish
     end
 
-    it 'responds to #cloudfront_invalidate', :stub_cloudfront_client do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-      expect(aws_publisher).to respond_to :cloudfront_invalidate
+    it 'responds to #create_cloudfront_invalidation_for' do
+      expect(aws_publisher).to respond_to :create_cloudfront_invalidation_for
     end
 
-    it 'responds to #cloudfront_invalidate_all', :stub_cloudfront_client do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
+    it 'responds to #cloudfront_invalidate_all' do
       expect(aws_publisher).to respond_to :cloudfront_invalidate_all
     end
   end
 
   describe '#publish' do
-    it 'requires as a parameter a hash of short URL params [:slug, :redirect]', :aggregate_failures do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
+    let(:aws_publisher) { described_class.new }
+    it 'sends a put request to S3 and invalidates the CloudFront cache when provided with a slug and URL' do
+      expect(aws_publisher).to receive(:create_cloudfront_invalidation_for).with('foo')
+      WebMock.stub_request(:put, s3_url_for('foo'))
 
-      expect {
-        aws_publisher.publish({}, :new)
-      }.to raise_error(ArgumentError,
-                       'requires a Hash with :slug and :redirect as parameters')
+      send_publish_message_for(slug: 'foo', redirect: 'http://www.example.com')
 
-      expect(aws_publisher).to receive(:publish).with({ slug: 'foo', redirect: 'http://www.example.com' }, :new)
-      aws_publisher.publish({ slug: 'foo', redirect: 'http://www.example.com' }, :new)
-    end
-
-    it 'requires a publication_type parameter', :aggregate_failures do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      short_url_hash = { slug: 'foo', redirect: 'http://www.example.com' }
-      expect {
-        aws_publisher.publish(short_url_hash, :foo)
-      }.to raise_error(ArgumentError,
-                       'publication_type must be :new or :changed')
-
-      expect(aws_publisher).to receive(:publish).with(short_url_hash, :new)
-      aws_publisher.publish(short_url_hash, :new)
-
-      expect(aws_publisher).to receive(:publish).with(short_url_hash, :changed)
-      aws_publisher.publish(short_url_hash, :changed)
-    end
-
-    it 'sends a put_object request to S3 for new short URLs' do
-      s3 = instance_double(Aws::S3::Client)
-      expect(s3).to receive(:put_object)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      # Inject spy
-      aws_publisher.instance_variable_set(:@s3, s3)
-
-      aws_publisher.publish({ slug: 'foo', redirect: 'http://www.example.com' }, :new)
-    end
-
-    it 'sends a copy_object request to S3 for updated short URLs' do
-      s3 = instance_double(Aws::S3::Client)
-      expect(s3).to receive(:copy_object)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      # Inject spy
-      aws_publisher.instance_variable_set(:@s3, s3)
-
-      aws_publisher.publish({ slug: 'foo', redirect: 'http://www.example.com' }, :changed)
-    end
-
-    it 'invalidates the cloudfront cache for the slug' do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      expect_any_instance_of(RedirectPublisherService::AwsPublisher).to receive(:cloudfront_invalidate)
-
-      aws_publisher.publish({ slug: 'foo', redirect: 'http://www.example.com' }, :new)
+      expect(WebMock).to have_requested(:put, s3_url_for('foo'))
+        .with(headers: {
+                'X-Amz-Website-Redirect-Location' => 'http://www.example.com'
+              })
     end
   end
 
   describe '#unpublish' do
-    it 'sends a destroy_object request to S3' do
-      s3 = instance_double(Aws::S3::Client)
-      expect(s3).to receive(:delete_object).and_return(true)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      # Inject spy
-      aws_publisher.instance_variable_set(:@s3, s3)
-
-      aws_publisher.unpublish(slug: 'foo', redirect: 'http://www.example.com')
-    end
-
-    it 'invalidates the cloudfront cache for the slug' do
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      expect_any_instance_of(RedirectPublisherService::AwsPublisher).to receive(:cloudfront_invalidate)
-
-      aws_publisher.unpublish(slug: 'foo', redirect: 'http://www.example.com')
+    let(:aws_publisher) { described_class.new }
+    it 'sends a delete request to S3 and invalidates the CloudFront cache' do
+      expect(aws_publisher).to receive(:create_cloudfront_invalidation_for).with('foo')
+      send_unpublish_message_for 'foo'
+      expect(WebMock).to have_requested(:delete, s3_url_for('foo'))
     end
   end
 
-  describe '#cloudfront_invalidate' do
+  describe '#create_cloudfront_invalidation_for' do
+    let(:aws_publisher) { described_class.new }
     it 'sends a create_invalidation request to Cloudfront' do
-      cloudfront = instance_double(Aws::CloudFront::Client)
-      expect(cloudfront).to receive(:create_invalidation)
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
-
-      aws_publisher.instance_variable_set(:@cloudfront, cloudfront)
-      aws_publisher.cloudfront_invalidate('foo')
+      WebMock.stub_request(:post, cloudfront_url)
+      aws_publisher.create_cloudfront_invalidation_for 'foo'
+      expect(WebMock).to have_requested(:post, cloudfront_url)
+        .with { |req|
+          Nokogiri::XML(req.body).at_css('InvalidationBatch Paths Items Path')
+                  .text.eql?('/foo')
+        }
     end
   end
 
   describe '#cloudfront_invalidate_all' do
+    let(:aws_publisher) { described_class.new_with_stubbed_responses }
     it 'calls #cloudfront_invalidate with a wildcard parameter' do
-      expect_any_instance_of(RedirectPublisherService::AwsPublisher).to receive(:cloudfront_invalidate).with('*')
-      aws_publisher = RedirectPublisherService::AwsPublisher.new(stub_responses: true)
+      expect(aws_publisher).to receive(:create_cloudfront_invalidation_for).with('*')
       aws_publisher.cloudfront_invalidate_all
     end
+  end
+
+  private
+
+  def send_publish_message_for(slug:, redirect:)
+    WebMock.stub_request(:put, s3_url_for(slug))
+    WebMock.stub_request(:post, cloudfront_url)
+    aws_publisher.publish(slug: slug, redirect: redirect)
+  end
+
+  def send_unpublish_message_for(slug)
+    WebMock.stub_request(:delete, s3_url_for(slug))
+    WebMock.stub_request(:post, cloudfront_url)
+    aws_publisher.unpublish(slug)
+  end
+
+  def s3_url_for(slug)
+    "https://#{ENV['AWS_S3_BUCKET_NAME']}.s3.amazonaws.com/#{slug}"
+  end
+
+  def cloudfront_url
+    'https://cloudfront.amazonaws.com/2017-03-25/distribution/IAMCLOUDFRONT111/invalidation'
   end
 end

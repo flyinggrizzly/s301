@@ -43,23 +43,15 @@ RSpec.describe ShortUrl, type: :model do
     specify '::publish sends a message to the PublisherService to publish a resource' do
       publisher_service = object_double(RedirectPublisherService).as_stubbed_const
       expect(publisher_service).to receive(:publish)
-        .with({ slug: 'sluggy-mc-slugface', redirect: 'http://www.example.com' }, :new)
+        .with(slug: 'sluggy-mc-slugface', redirect: 'http://www.example.com')
 
       ShortUrl.publish(slug: 'sluggy-mc-slugface', redirect: 'http://www.example.com')
-    end
-
-    specify '::republish sends a message to the PublisherService to republish a resource' do
-      publisher_service = object_double(RedirectPublisherService).as_stubbed_const
-      expect(publisher_service).to receive(:publish)
-        .with({ slug: 'sluggy-republish-face', redirect: 'http://www.example.com' }, :changed)
-
-      ShortUrl.republish(slug: 'sluggy-republish-face', redirect: 'http://www.example.com')
     end
 
     specify '::unpublish sends a message to the PublisherService to unpublish a resource' do
       publisher_service = object_double(RedirectPublisherService).as_stubbed_const
       expect(publisher_service).to receive(:unpublish)
-        .with(slug: 'sluggy-unpublish-face', redirect: 'http://www.example.com')
+        .with('sluggy-unpublish-face')
 
       ShortUrl.unpublish(slug: 'sluggy-unpublish-face', redirect: 'http://www.example.com')
     end

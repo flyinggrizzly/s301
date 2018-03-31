@@ -11,11 +11,17 @@ env:
 addons:
   postgresql: '9.6'
 
+before_install:
+  - gem install bundler
+
 before_script: 
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
+  - cp config/database.travis.yml config/database.yml
   - psql -c 'create database s301_test;' -U postgres
+  - bin/rails db:migrate
+  - bin/spring stop
 
 script:
   - bundle exec rspec

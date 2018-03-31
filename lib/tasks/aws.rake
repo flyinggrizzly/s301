@@ -1,4 +1,4 @@
-require 'redirect_publisher_service/aws_publisher'
+require 'redirect_publisher_service'
 
 namespace :cloudfront do
   include RedirectPublisherService
@@ -9,7 +9,7 @@ namespace :cloudfront do
     object = ENV['RESOURCE']
     aws_publisher = RedirectPublisherService::AwsPublisher.new
     printf 'Invalidation response: '
-    puts aws_publisher.cloudfront_invalidate(object).inspect
+    puts aws_publisher.create_cloudfront_invalidation_for(object).inspect
   end
 
   desc 'Invalidate all cloudfront items'

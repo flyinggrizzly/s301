@@ -4,19 +4,17 @@ require 'redirect_publisher_service/aws_publisher'
 module RedirectPublisherService
   # Accepts a hash { slug: 'slug', redirect: 'http://www.example.com' } and
   # a publication type, either :new or :changed
-  def self.publish(short_url = {}, publication_type)
-    raise_unless_short_url_parameters_valid(short_url, 'publish')
-    raise '`publication_type` must be `:new` or `:changed`' unless %i[new changed].include? publication_type
+  def self.publish(short_url = {}, publisher = nil)
+    raise_unless_short_url_parameters_valid(short_url)
 
-    aws_publisher = AwsPublisher.new
-    aws_publisher.publish(short_url, publication_type)
+    publisher ||= AwsPublisher.new
+    publisher.publish(short_url)
   end
 
   # Accepts a hash { slug: 'slug', redirect: 'http://www.example.com' }
-  def self.unpublish(short_url = {})
-    raise_unless_short_url_parameters_valid(short_url, 'unpublish')
+  def self.unpublish(slug)
     aws_publisher = AwsPublisher.new
-    aws_publisher.unpublish(short_url)
+    aws_publisher.unpublish(slug)
   end
 
   private_class_method def self.short_url_vals_not_blank(short_url)
@@ -25,13 +23,8 @@ module RedirectPublisherService
     end
   end
 
-  private_class_method def self.raise_unless_short_url_parameters_valid(short_url, publication_type)
-    case publication_type
-    when 'publish'
-      msg = 'short URLs cannot be published without both slug and redirect'
-    when 'unpublish'
-      msg = 'short URLs cannot be unpublished without both slug and redirect'
-    end
+  private_class_method def self.raise_unless_short_url_parameters_valid(short_url)
+    msg = 'short URLs cannot be published without both slug and redirect'
     raise msg unless short_url.keys.sort.eql? %i[redirect slug]
     raise msg unless short_url_vals_not_blank(short_url)
   end
