@@ -20,6 +20,7 @@ before_script:
   - ./cc-test-reporter before-build
   - cp config/database.travis.yml config/database.yml
   - psql -c 'create database s301_test;' -U postgres
+  - bin/rails db:migrate
 
 script:
   - bundle exec rspec
