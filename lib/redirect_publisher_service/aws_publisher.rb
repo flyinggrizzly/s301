@@ -4,6 +4,8 @@ module RedirectPublisherService
     require 'aws-sdk-cloudfront'
     require 'aws-sdk-s3'
 
+    ONE_YEAR_IN_SECONDS = 31536000
+
     def initialize(client_params = nil)
       @bucket        = ENV['AWS_S3_BUCKET_NAME']
       @distro_id     = ENV['AWS_CLOUDFRONT_DISTRO_ID'] || nil
@@ -46,7 +48,7 @@ module RedirectPublisherService
       tries ||= 3
       @s3.put_object(bucket:                    @bucket,
                      key:                       short_url_data[:slug],
-                     cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
+                     cache_control:             s3_object_cache_control_headers,
                      website_redirect_location: short_url_data[:redirect])
     rescue Aws::S3::Errors
       retry unless (tries -= 1).zero?
@@ -67,6 +69,13 @@ module RedirectPublisherService
 
     def object_path(slug)
       "/#{slug}"
+    end
+
+    def s3_object_cache_control_headers
+      time_a_browser_should_cache = 'max-age=0'
+      time_cloudfront_should_cache = "s-maxage=#{ONE_YEAR_IN_SECONDS}"
+
+      "#{time_a_browser_should_cache} #{time_cloudfront_should_cache}"
     end
 
     def s3_client
