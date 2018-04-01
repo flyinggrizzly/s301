@@ -14,33 +14,6 @@
     width: 100%;
   }
 }
-.short_urls {
-  list-style: none;
-  margin-left: 0;
-  margin-top: 50px;
-  ul {
-    list-style: none;
-    margin-left: 0;
-    li {
-      margin-left: none;
-    }
-  }
-}
-.short_url {
-  padding: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid lightgrey;
-  .menu li h5 a {
-    padding-left: 0;
-    margin-right: 20px;
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-  .button {
-    margin-right: 10px;
-  }
-}
 ul.short_url--edit.short_url.menu {
   padding-left: 0 !important;
 }

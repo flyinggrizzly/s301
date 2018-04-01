@@ -24,6 +24,35 @@ nav ul.site_nav {
   font-size: 2rem;
 }
 
+/* lists */
+.users, .short_urls {
+  list-style: none;
+  margin-left: 0;
+  margin-top: 50px;
+  ul {
+    list-style: none;
+    margin-left: 0;
+    li {
+      margin-left: none;
+    }
+  }
+}
+.user, .short_url {
+  padding: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid lightgrey;
+  .menu li h5 a {
+    padding-left: 0;
+    margin-right: 20px;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  .button {
+    margin-right: 10px;
+  }
+}
+
 /* miscellaneous */
 
 .debug_dump {
