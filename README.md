@@ -9,7 +9,7 @@
 
 S301 is intended to be a lightweight, fast, and resilient URL shortener. It uses AWS' S3 and Cloudfront in ways typically intended for hosting static websites, to expose redirects at any Cloudfront edge location.
 
-The Rails app manages all known short URLs, and when changes are made, they are published out to an S3 bucket, and the Cloudfront cache is invalidated. Instead of static HTML objects being stored in the S3 bucket, S301 stores itty-bitty files with two important pieces of information: the name, which is your short URL slug, and an [`x-amz-website-redirect-location` metadatum](https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html#how-to-page-redirect), which is interpreted as the destination in a 301 redirect.
+The Rails app manages all known short URLs, and when changes are made, they are published out to an S3 bucket, and the Cloudfront cache is invalidated. Instead of static HTML objects being stored in the S3 bucket, S301 sends a message to its publisher service with two important pieces of information: the short URL slug and redirect. The service then updates the [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules-redirectrule.html) of the bucket to include all known short URLs as redirects. It also makes a call to Cloudfront to invalidate the cache for the given slug.
 
 This has a few cool implications:
 
@@ -74,19 +74,6 @@ Before you start up the Rails app, there are a few things that need to be set up
 - create the databases: `bin/rails db:create; bin/rails db:migrate`
 - running tests: `bundle exec rspec; bundle exec cucumber`
 - run the app: `bin/rails s`
-
-### S3 gotchas
-
-The AWS publisher works pretty well, but there is a little bit of brittleness in that it is not currently possible to update a short URL that hasn't been pushed to S3.
-
-The S3 PUT action differs for new and existing objects (I know...), and the ShortUrl::publish action calls a different method in the publisher service based on whether or not the `created_at` and `updated_at` attributes on a short URL object differ.
-
-If they differ, it will call an S3 PUT/Copy action, but this will fail if there is no object in S3 to copy from. (It's been done this way to reduce the HTTP requests made to AWS, but there are limitations... and this is a candidate for change). This *will* cause a Rails error
-
-If you run into these in development, the easiest thing to do is pull up the console and destroy the short URL in the database, then recreate it in the app.
-
-This pretty much only ever comes up if you've been working with the database before adding the S3 bucket to the mix, but it would also be an issue in production if the first PUT request to S3 failed.
-
 
 ### Cloudfront gotcha
 

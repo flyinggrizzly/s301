@@ -5,8 +5,6 @@ module RedirectPublisherService
     require 'aws-sdk-cloudfront'
     require 'aws-sdk-s3'
 
-    ONE_YEAR_IN_SECONDS = 31536000
-
     def initialize(client_params = nil)
       @bucket        = ENV['AWS_S3_BUCKET_NAME']
       @distro_id     = ENV['AWS_CLOUDFRONT_DISTRO_ID'] || nil
