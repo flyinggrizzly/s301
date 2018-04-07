@@ -6,7 +6,13 @@
       <nav>
         <ul class="menu site_nav">
           <li><%= link_to 'Short URLs', short_urls_path %></li>
-          <li><a href="https://github.com/flyinggrizzly/s301" class="agpl-source-code">View on Github</a></li>
+          <li>
+            <% if signed_in? %>
+              Signed in as: <%= current_user.email %><%= link_to 'Sign out', sign_out_path, method: :delete %>
+            <% else %>
+              <%= link_to 'Sign in', sign_in_path %>
+            <% end %>
+          </li>
         </ul>
       </nav>
     </div>
