@@ -1,4 +1,5 @@
-require 'redirect_publisher_service'
+require_relative '../../app/services/redirect_publisher_service'
+require_relative '../../app/services/redirect_publisher_service/aws_publisher'
 
 namespace :cloudfront do
   include RedirectPublisherService
