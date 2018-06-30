@@ -32,7 +32,9 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
 
       expect(WebMock).to have_requested(:put, s3_url_for('foo'))
         .with(headers: {
-                'X-Amz-Website-Redirect-Location' => 'http://www.example.com'
+                'X-Amz-Website-Redirect-Location' => 'http://www.example.com',
+                'Content-Type' => 'application/octet-stream',
+                'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate'
               })
     end
   end
