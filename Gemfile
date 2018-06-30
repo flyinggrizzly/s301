@@ -6,6 +6,7 @@ git_source(:github) do |repo_name|
 end
 
 gem 'rails', '~> 5.1.5'
+gem 'sprockets', '~> 3.7.2'
 
 gem 'jbuilder',   '~> 2.5'
 gem 'pg',         '~> 0.18'
