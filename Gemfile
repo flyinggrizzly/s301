@@ -8,6 +8,9 @@ end
 gem 'rails', '~> 5.1.5'
 gem 'sprockets', '~> 3.7.2'
 
+gem 'devise',           '~> 4.2'
+gem 'devise_invitable', '~> 1.7.0'
+
 gem 'jbuilder',   '~> 2.5'
 gem 'pg',         '~> 0.18'
 gem 'puma',       '~> 3.7'
