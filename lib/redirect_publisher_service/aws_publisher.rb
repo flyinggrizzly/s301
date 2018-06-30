@@ -47,6 +47,7 @@ module RedirectPublisherService
       @s3.put_object(bucket:                    @bucket,
                      key:                       short_url_data[:slug],
                      cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
+                     content_type:              'application/octet-stream',
                      website_redirect_location: short_url_data[:redirect])
     rescue Aws::S3::Errors
       retry unless (tries -= 1).zero?
