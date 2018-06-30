@@ -1,5 +1,3 @@
-require 'redirect_publisher_service/aws_publisher'
-
 # Provides methods for publishing short URLs to a static host
 module RedirectPublisherService
   # Accepts a hash { slug: 'slug', redirect: 'http://www.example.com' } and
@@ -28,7 +26,4 @@ module RedirectPublisherService
     raise msg unless short_url.keys.sort.eql? %i[redirect slug]
     raise msg unless short_url_vals_not_blank(short_url)
   end
-
-  # Available publishers (defined in lib/redirect_publisher_service/*_publisher.rb)
-  class AwsPublisher; end
 end
