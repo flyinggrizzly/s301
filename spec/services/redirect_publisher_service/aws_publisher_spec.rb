@@ -1,15 +1,16 @@
 require 'rails_helper'
 require 'nokogiri/xml'
-require 'redirect_publisher_service'
 
 RSpec.describe RedirectPublisherService::AwsPublisher do
 
   describe 'public interface' do
     let(:aws_publisher) { described_class.new_with_stubbed_responses }
+    it 'responds to #publish' do
+      expect(aws_publisher).to respond_to :publish
+    end
 
-    it 'responds to #publish_redirects_for' do
-      expect(aws_publisher).to respond_to :publish_redirects_for
-      expect(aws_publisher.method(:publish_redirects_for)).to eq aws_publisher.method(:define_bucket_redirect_rules_for)
+    it 'responds to #unpublish' do
+      expect(aws_publisher).to respond_to :unpublish
     end
 
     it 'responds to #create_cloudfront_invalidation_for' do
@@ -21,14 +22,27 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
     end
   end
 
-  describe '#publish_redirects_for' do
+  describe '#publish' do
     let(:aws_publisher) { described_class.new }
-    it 'sends a PUT request to configure the bucket with redirects and index and error documents' do
-      WebMock.stub_request(:put, "https://#{ENV['AWS_S3_BUCKET_NAME']}.s3.amazonaws.com/?website")
-      aws_publisher.publish_redirects_for([ShortUrl.new(slug: 'da-slug', redirect: 'http://www.example.com'),
-                                           ShortUrl.new(slug: 'da-slug-2', redirect: 'http://www.example.com')])
-      expect(WebMock).to have_requested(:put, "https://#{ENV['AWS_S3_BUCKET_NAME']}.s3.amazonaws.com/?website")
-        .with { |req| req.body == bucket_config_update_request_body }
+    it 'sends a put request to S3 and invalidates the CloudFront cache when provided with a slug and URL' do
+      expect(aws_publisher).to receive(:create_cloudfront_invalidation_for).with('foo')
+      WebMock.stub_request(:put, s3_url_for('foo'))
+
+      send_publish_message_for(slug: 'foo', redirect: 'http://www.example.com')
+
+      expect(WebMock).to have_requested(:put, s3_url_for('foo'))
+        .with(headers: {
+                'X-Amz-Website-Redirect-Location' => 'http://www.example.com'
+              })
+    end
+  end
+
+  describe '#unpublish' do
+    let(:aws_publisher) { described_class.new }
+    it 'sends a delete request to S3 and invalidates the CloudFront cache' do
+      expect(aws_publisher).to receive(:create_cloudfront_invalidation_for).with('foo')
+      send_unpublish_message_for 'foo'
+      expect(WebMock).to have_requested(:delete, s3_url_for('foo'))
     end
   end
 
@@ -73,42 +87,5 @@ RSpec.describe RedirectPublisherService::AwsPublisher do
 
   def cloudfront_url
     'https://cloudfront.amazonaws.com/2017-03-25/distribution/IAMCLOUDFRONT111/invalidation'
-  end
-
-  def bucket_config_update_request_body
-    <<~REQUEST_BODY
-      <WebsiteConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
-        <ErrorDocument>
-          <Key>unknown-short-url</Key>
-        </ErrorDocument>
-        <IndexDocument>
-          <Suffix>index</Suffix>
-        </IndexDocument>
-        <RoutingRules>
-          <RoutingRule>
-            <Condition>
-              <KeyPrefixEquals>da-slug</KeyPrefixEquals>
-            </Condition>
-            <Redirect>
-              <HostName>www.example.com</HostName>
-              <HttpRedirectCode>307</HttpRedirectCode>
-              <Protocol>http</Protocol>
-              <ReplaceKeyWith></ReplaceKeyWith>
-            </Redirect>
-          </RoutingRule>
-          <RoutingRule>
-            <Condition>
-              <KeyPrefixEquals>da-slug-2</KeyPrefixEquals>
-            </Condition>
-            <Redirect>
-              <HostName>www.example.com</HostName>
-              <HttpRedirectCode>307</HttpRedirectCode>
-              <Protocol>http</Protocol>
-              <ReplaceKeyWith></ReplaceKeyWith>
-            </Redirect>
-          </RoutingRule>
-        </RoutingRules>
-      </WebsiteConfiguration>
-    REQUEST_BODY
   end
 end

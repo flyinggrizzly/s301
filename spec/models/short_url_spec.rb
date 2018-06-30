@@ -40,22 +40,20 @@ RSpec.describe ShortUrl, type: :model do
   end
 
   describe 'class methods' do
-    describe '::publish' do
-      it 'sends all existing short URLs to the RedirectPublisherService and requests a CDN invalidation for the updated or created short URL' do
-        su = ShortUrl.new(slug: 'slug', redirect: 'http://www.example.com')
-        publisher_service = object_double(RedirectPublisherService).as_stubbed_const
-        expect(publisher_service).to receive(:publish).with(ShortUrl.all)
-        expect(publisher_service).to receive(:invalidate_cdn_cache_for).with('slug')
-        ShortUrl.publish(su)
-      end
-    end
-
-    specify '::unpublish sends a message to the PublisherService to republish remaining short URLs' do
-      su = ShortUrl.new(slug: 'sluggy-unpublish-face', redirect: 'http://www.example.com')
+    specify '::publish sends a message to the PublisherService to publish a resource' do
       publisher_service = object_double(RedirectPublisherService).as_stubbed_const
       expect(publisher_service).to receive(:publish)
-      expect(publisher_service).to receive(:invalidate_cdn_cache_for)
-      ShortUrl.unpublish(su)
+        .with(slug: 'sluggy-mc-slugface', redirect: 'http://www.example.com')
+
+      ShortUrl.publish(slug: 'sluggy-mc-slugface', redirect: 'http://www.example.com')
+    end
+
+    specify '::unpublish sends a message to the PublisherService to unpublish a resource' do
+      publisher_service = object_double(RedirectPublisherService).as_stubbed_const
+      expect(publisher_service).to receive(:unpublish)
+        .with('sluggy-unpublish-face')
+
+      ShortUrl.unpublish(slug: 'sluggy-unpublish-face', redirect: 'http://www.example.com')
     end
   end
 end

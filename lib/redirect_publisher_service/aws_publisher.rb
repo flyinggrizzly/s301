@@ -1,7 +1,6 @@
 module RedirectPublisherService
   # Provides methods for interacting with AWS S3 and Cloudfront
   class AwsPublisher
-    require 'addressable'
     require 'aws-sdk-cloudfront'
     require 'aws-sdk-s3'
 
@@ -13,19 +12,20 @@ module RedirectPublisherService
       @cloudfront    = cloudfront_client unless @distro_id.nil?
     end
 
-    # Convenience constructor for creating a test object that uses the AWS SDK response stubs
     def self.new_with_stubbed_responses
       new(stub_responses: true)
     end
 
-    def define_bucket_redirect_rules_for(short_urls)
-      config = s3_bucket_site_config_with(short_urls)
-      @s3.put_bucket_website(
-        bucket: @bucket,
-        website_configuration: config
-      )
+    def publish(short_url_data)
+      validate short_url_data
+      put_s3_object_for short_url_data
+      create_cloudfront_invalidation_for short_url_data[:slug]
     end
-    alias publish_redirects_for define_bucket_redirect_rules_for
+
+    def unpublish(slug)
+      delete_s3_object_for slug
+      create_cloudfront_invalidation_for slug
+    end
 
     def create_cloudfront_invalidation_for(slug)
       return unless @distro_id
@@ -42,27 +42,31 @@ module RedirectPublisherService
 
     private
 
+    def put_s3_object_for(short_url_data)
+      tries ||= 3
+      @s3.put_object(bucket:                    @bucket,
+                     key:                       short_url_data[:slug],
+                     cache_control:             'max-age=0, no-cache, no-store, must-revalidate',
+                     website_redirect_location: short_url_data[:redirect])
+    rescue Aws::S3::Errors
+      retry unless (tries -= 1).zero?
+    end
+
+    def delete_s3_object_for(key)
+      tries ||= 3
+      @s3.delete_object(bucket: @bucket,
+                        key:    key)
+    rescue Aws::S3::Errors
+      retry unless (tries -= 1).zero?
+    end
+
+    def validate(params)
+      msg = 'requires a Hash with :slug and :redirect as parameters'
+      raise(ArgumentError, msg) unless params.class.eql?(Hash) && params.keys.sort.eql?(%i[redirect slug])
+    end
+
     def object_path(slug)
       "/#{slug}"
-    end
-
-    def s3_bucket_site_config_with(short_urls)
-      config = {
-        error_document: { key: 'unknown-short-url' },
-        index_document: { suffix: 'index' },
-      }
-      config.merge(routing_rules: generate_redirect_rules_hash_for(short_urls)) if short_urls.first
-    end
-
-    def generate_redirect_rules_hash_for(short_urls)
-      short_urls.map do |short_url|
-        redirect = Addressable::URI.heuristic_parse(short_url.redirect)
-        { condition: { key_prefix_equals: short_url.slug },
-          redirect: { host_name: redirect.host,
-                      replace_key_with: redirect.path,
-                      protocol: redirect.scheme,
-                      http_redirect_code: '307' } }
-      end
     end
 
     def s3_client
