@@ -12,25 +12,34 @@ class ShortUrl < ApplicationRecord
   after_save     :publish
   before_destroy :unpublish
 
-  def self.publish(short_url = nil)
-    RedirectPublisherService.publish(ShortUrl.all)
-    slug_to_invalidate = short_url ? short_url.slug : '*'
-    RedirectPublisherService.invalidate_cdn_cache_for slug_to_invalidate
+  def self.publish(short_url)
+    slug, redirect = validate_and_assign_publication_args_for short_url
+    RedirectPublisherService.publish(slug: slug, redirect: redirect)
   end
 
   def self.unpublish(short_url)
-    extant_short_urls = ShortUrl.all - [short_url]
-    RedirectPublisherService.publish(extant_short_urls)
-    RedirectPublisherService.invalidate_cdn_cache_for short_url.slug
+    slug, redirect = validate_and_assign_publication_args_for short_url
+    RedirectPublisherService.unpublish(slug)
+  end
+
+  private_class_method def self.validate_and_assign_publication_args_for(short_url)
+    # Case behaves strangely with .class--call directly against object
+    # see https://stackoverflow.com/questions/948135/how-to-write-a-switch-statement-in-ruby#answer-5694333
+    case short_url
+    when ShortUrl
+      [short_url.slug, short_url.redirect]
+    when Hash
+      raise ArgumentError, 'hash keys must be :slug and :redirect' unless short_url.keys.sort.eql? %i[redirect slug]
+      [short_url[:slug], short_url[:redirect]]
+    else
+      raise ArgumentError, 'Expected a Hash or ShortUrl object'
+    end
   end
 
   private
 
   def publish
     ShortUrl.publish(itself)
-  rescue StandardError
-    flash[:error] = 'Short URL could not be published'
-    throw :abort
   end
 
   def unpublish
